@@ -1,14 +1,12 @@
 // Simple backend for Guestboard
 // I could've done this in Python, but I'm working on a low end device
-#![feature(future_join)]
-mod benchmark;
 mod database;
 mod ip_ratelimit;
 mod queries;
 mod states;
 use actix_web::{get, post, web, App, HttpRequest, HttpResponse, HttpServer, Responder};
 use database::AddMsgError;
-use std::{future::join, sync::Arc, sync::Mutex};
+use std::{sync::Arc, sync::Mutex};
 use tokio_cron_scheduler::{Job, JobScheduler};
 use uuid::Uuid;
 type PublicAppState = web::Data<states::MainState>;
@@ -26,9 +24,10 @@ async fn add(
     request_body: web::Json<queries::AddMessageQuery>,
 ) -> impl Responder {
     let request_body = request_body.into_inner();
-    let mut db_instance = state.db.lock().unwrap();
     let conn_info = request.connection_info();
     let ip = conn_info.realip_remote_addr().unwrap();
+    //
+    let mut db_instance = state.db.lock().unwrap();
     let db_out = db_instance.add_msg(
         ip.to_string(),
         request_body.username,
@@ -68,7 +67,7 @@ async fn remove(
     if !db_out {
         return HttpResponse::Unauthorized().body("");
     }
-    HttpResponse::Ok().body("body")
+    HttpResponse::Ok().body("")
 }
 
 #[get("/")]
@@ -84,6 +83,7 @@ async fn main() -> () {
     let container = web::Data::new(states::MainState {
         db: database_mutex.clone(),
     });
+
     let public_server = HttpServer::new(move || {
         App::new()
             .app_data(container.clone())
@@ -97,6 +97,7 @@ async fn main() -> () {
     let api_key_container = web::Data::new(states::ApiKeyState {
         api_key: api_key.clone(),
     });
+
     let private_api_key_server = HttpServer::new(move || {
         App::new()
             .app_data(api_key_container.clone())
@@ -117,12 +118,18 @@ async fn main() -> () {
         .unwrap(),
     );
 
-    let sched_corotiune = sched.start();
-    join!(
+    let sched_coroutine = async {
+        sched.start().await;
+        Ok(())
+    };
+    let housekeeping_coroutine = async {
+        housekeeping_job.await;
+        Ok(())
+    };
+    tokio::try_join!(
         public_server,
         private_api_key_server,
-        housekeeping_job,
-        sched_corotiune
-    )
-    .await;
+        sched_coroutine,
+        housekeeping_coroutine
+    );
 }

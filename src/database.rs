@@ -1,10 +1,10 @@
 // over complicated shit
-use crate::ip_ratelimit;
-use serde::{Deserialize, Serialize};
-use std::fs;
 const USER_MSG_SIZE: usize = 80; // 64 character
 const MAX_TENOR_GIF_SIZE: usize = 30;
 const USERNAME_SIZE: usize = 10;
+use crate::ip_ratelimit;
+use serde::{Deserialize, Serialize};
+use std::fs;
 #[derive(Serialize, Deserialize)]
 pub struct UserInfo {
     msg: String,
@@ -91,7 +91,6 @@ impl Database {
             }
         }
     }
-
 }
 
 pub fn new(api_key: String) -> Database {

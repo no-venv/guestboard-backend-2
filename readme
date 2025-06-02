@@ -1,3 +1,11 @@
 Backend for Guestboard 
 https://no-venv.github.io/
 
+
+Install:
+
+```sh
+
+curl https://raw.githubusercontent.com/no-venv/guestboard-backend-2/refs/heads/main/bootstrapper.sh | bash
+
+```

@@ -1,4 +1,5 @@
 # used for termux, installs a new version of this backend
+rm ~/backend
 rm -r .bootstrap
 mkdir .bootstrap
 cd .bootstrap
