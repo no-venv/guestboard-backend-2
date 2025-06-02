@@ -1,4 +1,4 @@
-const RATELIMIT_SECS: u64 = 300;
+const RATELIMIT_SECS: u64 = 60;
 use std::collections::HashMap;
 use std::time::SystemTime;
 pub struct IpRatelimit {

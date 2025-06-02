@@ -37,7 +37,7 @@ async fn add(
     );
     match db_out {
         AddMsgError::Ratelimit => HttpResponse::Unauthorized().body(format!(
-            "you need to wait ${:?} seconds before sending a new message",
+            "you need to wait {} seconds before sending a new message",
             db_instance.ip_ratelimit.ratelimit_left(&ip.to_string())
         )),
         AddMsgError::UsernameOrMsgEmpty => {
@@ -110,7 +110,7 @@ async fn main() -> () {
     let db_instance = database_mutex.clone();
     let housekeeping_job = sched.add(
         Job::new("every 60 seconds", move |uuid, l: JobScheduler| {
-            println!("performing house keeping");
+            println!("perform house keeping");
             let mut db = db_instance.lock().unwrap();
             db.save();
             db.ip_ratelimit.remove_stale();
