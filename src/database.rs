@@ -17,7 +17,6 @@ pub struct Database {
     pub ip_ratelimit: ip_ratelimit::IpRatelimit,
     owner_key: String,
 }
-
 pub enum AddMsgError {
     Ratelimit,
     UsernameOrMsgEmpty,
