@@ -4,6 +4,7 @@ mod database;
 mod ip_ratelimit;
 mod queries;
 mod states;
+use actix_cors::Cors;
 use actix_web::{get, post, web, App, HttpRequest, HttpResponse, HttpServer, Responder};
 use database::AddMsgError;
 use std::{sync::Arc, sync::Mutex};
@@ -77,6 +78,7 @@ async fn get_key(state: PrivateApiKeyState) -> impl Responder {
 
 #[actix_rt::main]
 async fn main() -> () {
+    
     let mut sched = JobScheduler::new().await.unwrap();
     let api_key = Uuid::new_v4().to_string();
     let database_mutex = Arc::new(Mutex::new(database::new(api_key.clone())));
@@ -85,7 +87,12 @@ async fn main() -> () {
     });
 
     let public_server = HttpServer::new(move || {
+        let cors = Cors::default()
+            .allow_any_origin()
+            .allow_any_header()
+            .allow_any_method();
         App::new()
+            .wrap(cors)
             .app_data(container.clone())
             .service(get_db)
             .service(add)
